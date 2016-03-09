@@ -1,0 +1,15 @@
+# Ignore everything
+
+*
+
+
+# But not these files...
+
+!.gitignore
+
+!.spacemacs
+
+
+# ...even if they are in subdirectories
+ 
+#!*/
