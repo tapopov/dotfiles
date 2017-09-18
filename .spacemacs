@@ -18,12 +18,22 @@ values."
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
    '(
+     (shell :variables
+            shell-default-shell 'term
+            shell-default-position 'bottom
+            shell-default-full-span nil
+            shell-default-height 100
+            )
+     csv
+     yaml
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press <SPC f e R> (Vim style) or
      ;; <M-m f e R> (Emacs style) to install them.
      ;; ----------------------------------------------------------------
      ;; html
+     javascript
+     typescript
      react
      auto-completion
      ;; better-defaults
@@ -36,14 +46,14 @@ values."
      ;;        shell-default-height 30
      ;;        shell-default-position 'bottom)
      ;; spell-checking
-     ;; syntax-checking
+     syntax-checking
      ;; version-control
      )
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages then consider to create a layer, you can also put the
    ;; configuration in `dotspacemacs/config'.
-   dotspacemacs-additional-packages '(yasnippet js2-mode flycheck expand-region tern)
+   dotspacemacs-additional-packages '(yasnippet js2-mode flycheck expand-region tern tide ng2-mode)
    ;;dotspacemacs-configuration-layers '(themes-megapack)
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
@@ -66,8 +76,6 @@ values."
    ;; uses emacs key bindings for vim's insert mode, but otherwise leaves evil
    ;; unchanged. (default 'vim)
    dotspacemacs-editing-style 'vim
-   evil-insert-state-cursor '((bar . 5) "yellow")
-   evil-normal-state-cursor '(box "purple")
    ;; If non nil output loading progress in `*Messages*' buffer. (default nil)
    dotspacemacs-verbose-loading nil
    ;; Specify the startup banner. Default value is `official', it displays
@@ -84,8 +92,8 @@ values."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press <SPC> T n to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(monokai,
-                         spacemacs-dark
+   dotspacemacs-themes '(spacemacs-dark
+                         monokai
                          spacemacs-light
                          solarized-light
                          solarized-dark
@@ -93,11 +101,11 @@ values."
                          monokai
                          zenburn)
    ;; If non nil the cursor color matches the state color.
-   dotspacemacs-colorize-cursor-according-to-state t
+   ;;---------------------------------------------------------------------dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font. `powerline-scale' allows to quickly tweak the mode-line
    ;; size to make separators look not too crappy.
    dotspacemacs-default-font '("Inconsolata"
-                               :size 15
+                               :size 13
                                :weight ultra-light
                                :width ultra-condensed
                                :antialias subpixel
@@ -139,7 +147,7 @@ values."
    dotspacemacs-helm-position 'bottom
    ;; If non nil the paste micro-state is enabled. When enabled pressing `p`
    ;; several times cycle between the kill ring content. (default nil)
-   dotspacemacs-enable-paste-micro-state nil
+   dotspacemacs-enable-paste-micro-state t
    ;; Which-key delay in seconds. The which-key buffer is the popup listing
    ;; the commands bound to the current keystroke sequence. (default 0.4)
    dotspacemacs-which-key-delay 0.4
@@ -200,14 +208,56 @@ values."
   "Initialization function for user code.
 It is called immediately after `dotspacemacs/init'.  You are free to put any
 user code."
+
+  (setq dotspacemacs-line-numbers t)
 )
 
 (defun dotspacemacs/user-config ()
   "Configuration function for user code.
  This function is called at the very end of Spacemacs initialization after
 layers configuration. You are free to put any user code."
+  (setq global-linum-mode t)
+  (use-package magithub
+    :after magit
+    :config (magithub-feature-autoinject t))
+
   (setq neo-vc-integration nil)
+
+  (setq global-linum-mode)
+  ;; (custom-set-variables '(flycheck-typescript-tslint-config "~/tslint.json"))
+
+  (setq evil-emacs-state-cursor '("red" box))
+  (setq evil-normal-state-tag   (propertize "N" 'face '((:background "green" :foreground "black")))
+        evil-emacs-state-tag    (propertize "E" 'face '((:background "orange" :foreground "black")))
+        evil-insert-state-tag   (propertize "I" 'face '((:background "red")))
+        evil-motion-state-tag   (propertize "M" 'face '((:background "blue")))
+        evil-visual-state-tag   (propertize "V" 'face '((:background "grey80" :foreground "black")))
+        evil-operator-state-tag (propertize "O" 'face '((:background "purple"))))
   ;; (define-key evil-normal-state-map "x" 'delete-region)
+  ;; (define-key evil-insert-state-map (kbd "C-TAB") 'indent-relative)
+  ;; (define-key evil-normal-state-map (kbd "backtab") 'indent-relative)
+  (global-set-key (kbd "<C-tab>") 'indent-relative)
+  (defun setup-tide-mode ()
+    (interactive)
+    (tide-setup)
+    (flycheck-mode +1)
+    (setq flycheck-check-syntax-automatically '(save mode-enabled))
+    (eldoc-mode +1)
+    ;; company is an optional dependency. You have to
+    ;; install it separately via package-install
+    ;; `M-x package-install [ret] company`
+    (company-mode +1))
+
+  ;; aligns annotation to the right hand side
+  (setq company-tooltip-align-annotations t)
+
+  ;; formats the buffer before saving
+  (add-hook 'before-save-hook 'tide-format-before-save)
+
+  (add-hook 'typescript-mode-hook #'setup-tide-mode)
+
+  ;; format options
+  (setq tide-format-options '(:insertSpaceAfterFunctionKeywordForAnonymousFunctions t :placeOpenBraceOnNewLineForFunctions nil))
 )
 
 ;; Do not write anything past this comment. This is where Emacs will
